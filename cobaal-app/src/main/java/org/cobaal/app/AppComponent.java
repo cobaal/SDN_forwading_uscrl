@@ -34,8 +34,19 @@ import org.onosproject.net.DeviceId;
 import org.onosproject.net.device.DeviceService;
 import org.onosproject.net.flow.DefaultTrafficSelector;
 import org.onosproject.net.flow.DefaultTrafficTreatment;
+import org.onosproject.net.flow.FlowEntry;
+import org.onosproject.net.flow.FlowRule;
+import org.onosproject.net.flow.FlowRuleService;
 import org.onosproject.net.flow.TrafficSelector;
 import org.onosproject.net.flow.TrafficTreatment;
+import org.onosproject.net.flow.criteria.Criterion;
+import org.onosproject.net.flow.criteria.EthCriterion;
+import org.onosproject.net.flow.criteria.EthTypeCriterion;
+import org.onosproject.net.flow.criteria.IPCriterion;
+import org.onosproject.net.flow.instructions.Instruction;
+import org.onosproject.net.flow.instructions.Instructions;
+import org.onosproject.net.flow.instructions.L2ModificationInstruction;
+import org.onosproject.net.flow.instructions.L2ModificationInstruction.ModEtherInstruction;
 import org.onosproject.net.flowobjective.DefaultForwardingObjective;
 import org.onosproject.net.flowobjective.ForwardingObjective;
 import org.onosproject.net.flowobjective.FlowObjectiveService;
@@ -53,6 +64,7 @@ import org.onlab.packet.IpAddress;
 import org.onlab.packet.Ip4Prefix;
 import org.onlab.packet.IPv4;
 import org.onlab.packet.Ethernet;
+import org.onlab.packet.EthType;
 
 /**
  * Skeletal ONOS application component.
@@ -76,6 +88,9 @@ public class AppComponent {
     @Reference(cardinality = ReferenceCardinality.MANDATORY)
     protected CoreService coreService;
 
+    @Reference(cardinality = ReferenceCardinality.MANDATORY)
+    protected FlowRuleService flowRuleService;
+
     private ApplicationId appId;
 
     @Activate
@@ -88,7 +103,7 @@ public class AppComponent {
     @Deactivate
     protected void deactivate() {
         log.info("Stopped");
-
+        flowRuleService.removeFlowRulesById(appId);
         topologyService.removeListener(topologyListener);
     }
 
@@ -141,6 +156,25 @@ public class AppComponent {
 
     //private void installRule(DeviceId deviceId, int srcIp, int dstIp, MacAddress nextMac, PortNumber portNumber) {
     private void installRule(DeviceId deviceId, int dstIp, MacAddress nextMac, PortNumber portNumber) {
+      for (FlowEntry r : flowRuleService.getFlowEntries(deviceId)) {
+        //log.info("flow rules : {}", r);
+        for (Criterion selectorCriteria : r.selector().criteria()) {
+          //log.info("selector : {}", selectorCriteria);
+          if (selectorCriteria.type().equals(Criterion.Type.IPV4_DST) && ((IPCriterion) selectorCriteria).ip().equals(Ip4Prefix.valueOf(dstIp, Ip4Prefix.MAX_MASK_LENGTH))) {
+            //log.info("fuck:{} ::::: {}", ((IPCriterion) selectorCriteria).ip(), Ip4Prefix.valueOf(dstIp, Ip4Prefix.MAX_MASK_LENGTH));
+            for (Instruction instruction : r.treatment().allInstructions()) {
+              if (instruction.type().equals(Instruction.Type.L2MODIFICATION) && ((ModEtherInstruction) instruction).mac().equals(nextMac)) {
+                return;
+
+              } else {
+                flowRuleService.removeFlowRules((FlowRule) r);
+                log.info("REMOVED RULE {}-{}", deviceId, IpAddress.valueOf(dstIp));
+              }
+            }
+          }
+        }
+      }
+
       TrafficSelector.Builder selectorBuilder = DefaultTrafficSelector.builder();
       //Ip4Prefix matchIp4SrcPrefix = Ip4Prefix.valueOf(srcIp, Ip4Prefix.MAX_MASK_LENGTH);
       Ip4Prefix matchIp4DstPrefix = Ip4Prefix.valueOf(dstIp, Ip4Prefix.MAX_MASK_LENGTH);
@@ -150,10 +184,12 @@ public class AppComponent {
       TrafficTreatment treatment = DefaultTrafficTreatment.builder().setEthDst(nextMac).setOutput(portNumber).build();
 
       int priority = 10;
-      int duration = 100;
+      //int duration = 100;
 
-      ForwardingObjective forwardingObjective = DefaultForwardingObjective.builder().withSelector(selectorBuilder.build()).withTreatment(treatment).withPriority(priority).withFlag(ForwardingObjective.Flag.VERSATILE).fromApp(appId).makeTemporary(duration).add();
+      // ForwardingObjective forwardingObjective = DefaultForwardingObjective.builder().withSelector(selectorBuilder.build()).withTreatment(treatment).withPriority(priority).withFlag(ForwardingObjective.Flag.VERSATILE).fromApp(appId).makeTemporary(duration).add();
+      ForwardingObjective forwardingObjective = DefaultForwardingObjective.builder().withSelector(selectorBuilder.build()).withTreatment(treatment).withPriority(priority).withFlag(ForwardingObjective.Flag.VERSATILE).fromApp(appId).add();
       flowObjectiveService.forward(deviceId, forwardingObjective);
+      log.info("UPDATE {}-{}-{}-{}", deviceId, IpAddress.valueOf(dstIp), nextMac, portNumber);
     }
 
 }
