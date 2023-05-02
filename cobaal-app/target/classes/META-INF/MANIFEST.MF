@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1650525506685
-Build-Jdk: 11.0.14.1
-Built-By: cobaal
+Bnd-LastModified: 1663430398965
+Build-Jdk: 11.0.11
+Built-By: csilab
 Bundle-Description: model predictive routing by cobaal
 Bundle-ManifestVersion: 2
 Bundle-Name: cobaal-app

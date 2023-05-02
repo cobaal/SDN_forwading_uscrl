@@ -98,6 +98,45 @@ public class AppComponent {
         log.info("Started");
         appId = coreService.registerApplication("org.cobaal.app");
         topologyService.addListener(topologyListener);
+
+             for (Device src : deviceService.getAvailableDevices()) {
+               for (Device dst : deviceService.getAvailableDevices()) {
+                 if (!src.equals(dst)) {
+                   //log.info("COBAAL:::::{} :::: {}", src.id().toString(), dst.id().toString());
+                   Set<Path> paths = topologyService.getPaths(topologyService.currentTopology(),src.id(),dst.id());
+                   List<Path> sortedPaths = new ArrayList<>(paths);
+                   sortedPaths.sort(Comparator.comparing(Path::cost));
+                   //log.info("path:::{}", sortedPaths.get(0).toString());
+                   for (Link link : sortedPaths.get(0).links()) {
+                     if (link.src().deviceId().equals(src.id())) {
+                       MacAddress nextMac = MacAddress.valueOf(deviceService.getPort(link.dst().deviceId(), link.dst().port()).annotations().value("portMac"));
+                       PortNumber portNumber = link.src().port();
+                       //log.info("NM:::::::{}", nextMac);
+                       //int srcParsedId = Integer.parseInt(src.id().toString().split(":")[1]);
+                       int dstParsedId = Integer.parseInt(dst.id().toString().split(":")[1], 16);
+                       int netmask = 10 * 16777216 + 0 * 65536 + 0 * 256;
+                       //int srcIP = netmask + ((srcParsedId / 100) - 1) * 3 + (srcParsedId % 100);
+                       int dstIP = netmask + dstParsedId;
+                       //log.info("+++++++++++++++{} / {}", IpAddress.valueOf(srcIP), IpAddress.valueOf(dstIP));
+
+                       //installRule(src.id(), srcIP, dstIP, nextMac, portNumber);
+                       installRule(src.id(), dstIP, nextMac, portNumber);
+                     }
+                   }
+
+                 } else {
+                   MacAddress nextMac = MacAddress.valueOf("FF:FF:FF:FF:FF:FF");
+                   PortNumber portNumber = PortNumber.portNumber(1);  // fixed!
+                   int dstParsedId = Integer.parseInt(dst.id().toString().split(":")[1], 16);	// hex string to decimal int
+                   int netmask = 10 * 16777216 + 0 * 65536 + 0 * 256;
+                   int dstIP = netmask + dstParsedId;
+                   installRule(src.id(), dstIP, nextMac, portNumber);
+                 }
+               }
+               // It is impossible to get the IP address form a device id
+               // So, I need to square device id with host IP and device IP
+               // i.e., "of:0000000000000002" <-> "192.168.0.2" <-> "10.0.0.2"
+             }
     }
 
     @Deactivate
@@ -112,8 +151,8 @@ public class AppComponent {
         public void event(TopologyEvent event) {
            if (event != null) {
              //log.info("COBAAL: {}", event.subject());
-             for (Device src : deviceService.getDevices()) {
-               for (Device dst : deviceService.getDevices()) {
+             for (Device src : deviceService.getAvailableDevices()) {
+               for (Device dst : deviceService.getAvailableDevices()) {
                  if (!src.equals(dst)) {
                    //log.info("COBAAL:::::{} :::: {}", src.id().toString(), dst.id().toString());
                    Set<Path> paths = topologyService.getPaths(topologyService.currentTopology(),src.id(),dst.id());
@@ -126,10 +165,10 @@ public class AppComponent {
                        PortNumber portNumber = link.src().port();
                        //log.info("NM:::::::{}", nextMac);
                        //int srcParsedId = Integer.parseInt(src.id().toString().split(":")[1]);
-                       int dstParsedId = Integer.parseInt(dst.id().toString().split(":")[1]);
+                       int dstParsedId = Integer.parseInt(dst.id().toString().split(":")[1], 16);
                        int netmask = 10 * 16777216 + 0 * 65536 + 0 * 256;
                        //int srcIP = netmask + ((srcParsedId / 100) - 1) * 3 + (srcParsedId % 100);
-                       int dstIP = netmask + ((dstParsedId / 100) - 1) * 3 + (dstParsedId % 100); // required modify later
+                       int dstIP = netmask + dstParsedId;
                        //log.info("+++++++++++++++{} / {}", IpAddress.valueOf(srcIP), IpAddress.valueOf(dstIP));
 
                        //installRule(src.id(), srcIP, dstIP, nextMac, portNumber);
@@ -140,9 +179,9 @@ public class AppComponent {
                  } else {
                    MacAddress nextMac = MacAddress.valueOf("FF:FF:FF:FF:FF:FF");
                    PortNumber portNumber = PortNumber.portNumber(1);  // fixed!
-                   int dstParsedId = Integer.parseInt(dst.id().toString().split(":")[1]);
+                   int dstParsedId = Integer.parseInt(dst.id().toString().split(":")[1], 16);	// hex string to decimal int
                    int netmask = 10 * 16777216 + 0 * 65536 + 0 * 256;
-                   int dstIP = netmask + ((dstParsedId / 100) - 1) * 3 + (dstParsedId % 100); // required modify later
+                   int dstIP = netmask + dstParsedId;
                    installRule(src.id(), dstIP, nextMac, portNumber);
                  }
                }
