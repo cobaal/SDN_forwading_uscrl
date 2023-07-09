@@ -125,11 +125,11 @@ public class AppComponent {
                    }
 
                  } else {
-                   MacAddress nextMac = MacAddress.valueOf("FF:FF:FF:FF:FF:FF");
-                   PortNumber portNumber = PortNumber.portNumber(1);  // fixed!
                    int dstParsedId = Integer.parseInt(dst.id().toString().split(":")[1], 16);	// hex string to decimal int
                    int netmask = 10 * 16777216 + 0 * 65536 + 0 * 256;
                    int dstIP = netmask + dstParsedId;
+                   MacAddress nextMac = MacAddress.valueOf("00:00:00:00:10:" + String.format("%02x", dstParsedId));
+                   PortNumber portNumber = PortNumber.portNumber(1);  // fixed!
                    installRule(src.id(), dstIP, nextMac, portNumber);
                  }
                }
@@ -177,11 +177,11 @@ public class AppComponent {
                    }
 
                  } else {
-                   MacAddress nextMac = MacAddress.valueOf("FF:FF:FF:FF:FF:FF");
-                   PortNumber portNumber = PortNumber.portNumber(1);  // fixed!
                    int dstParsedId = Integer.parseInt(dst.id().toString().split(":")[1], 16);	// hex string to decimal int
                    int netmask = 10 * 16777216 + 0 * 65536 + 0 * 256;
                    int dstIP = netmask + dstParsedId;
+                   MacAddress nextMac = MacAddress.valueOf("00:00:00:00:10:" + String.format("%02x", dstParsedId));
+                   PortNumber portNumber = PortNumber.portNumber(1);  // fixed!
                    installRule(src.id(), dstIP, nextMac, portNumber);
                  }
                }
