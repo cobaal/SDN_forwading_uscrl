@@ -113,7 +113,8 @@ public class AppComponent {
                        PortNumber portNumber = link.src().port();
                        //log.info("NM:::::::{}", nextMac);
                        //int srcParsedId = Integer.parseInt(src.id().toString().split(":")[1]);
-                       int dstParsedId = Integer.parseInt(dst.id().toString().split(":")[1], 16);
+                       //int dstParsedId = Integer.parseInt(dst.id().toString().split(":")[1], 16);
+                       int dstParsedId = Integer.parseInt(deviceService.getPort(dst.id(), PortNumber.LOCAL).annotations().value("portName").replaceAll("[^0-9]", ""));
                        int netmask = 10 * 16777216 + 0 * 65536 + 0 * 256;
                        //int srcIP = netmask + ((srcParsedId / 100) - 1) * 3 + (srcParsedId % 100);
                        int dstIP = netmask + dstParsedId;
@@ -125,7 +126,8 @@ public class AppComponent {
                    }
 
                  } else {
-                   int dstParsedId = Integer.parseInt(dst.id().toString().split(":")[1], 16);	// hex string to decimal int
+                   //int dstParsedId = Integer.parseInt(dst.id().toString().split(":")[1], 16);	// hex string to decimal int
+                   int dstParsedId = Integer.parseInt(deviceService.getPort(dst.id(), PortNumber.LOCAL).annotations().value("portName").replaceAll("[^0-9]", ""));
                    int netmask = 10 * 16777216 + 0 * 65536 + 0 * 256;
                    int dstIP = netmask + dstParsedId;
                    MacAddress nextMac = MacAddress.valueOf("00:00:00:00:10:" + String.format("%02x", dstParsedId));
@@ -135,7 +137,7 @@ public class AppComponent {
                }
                // It is impossible to get the IP address form a device id
                // So, I need to square device id with host IP and device IP
-               // i.e., "of:0000000000000002" <-> "192.168.0.2" <-> "10.0.0.2"
+               // i.e., "br2" <-> "192.168.10.2" <-> "10.0.0.2"
              }
     }
 
@@ -165,7 +167,8 @@ public class AppComponent {
                        PortNumber portNumber = link.src().port();
                        //log.info("NM:::::::{}", nextMac);
                        //int srcParsedId = Integer.parseInt(src.id().toString().split(":")[1]);
-                       int dstParsedId = Integer.parseInt(dst.id().toString().split(":")[1], 16);
+                       //int dstParsedId = Integer.parseInt(dst.id().toString().split(":")[1], 16);
+                       int dstParsedId = Integer.parseInt(deviceService.getPort(dst.id(), PortNumber.LOCAL).annotations().value("portName").replaceAll("[^0-9]", ""));
                        int netmask = 10 * 16777216 + 0 * 65536 + 0 * 256;
                        //int srcIP = netmask + ((srcParsedId / 100) - 1) * 3 + (srcParsedId % 100);
                        int dstIP = netmask + dstParsedId;
@@ -177,7 +180,8 @@ public class AppComponent {
                    }
 
                  } else {
-                   int dstParsedId = Integer.parseInt(dst.id().toString().split(":")[1], 16);	// hex string to decimal int
+                   //int dstParsedId = Integer.parseInt(dst.id().toString().split(":")[1], 16);	// hex string to decimal int
+                   int dstParsedId = Integer.parseInt(deviceService.getPort(dst.id(), PortNumber.LOCAL).annotations().value("portName").replaceAll("[^0-9]", ""));
                    int netmask = 10 * 16777216 + 0 * 65536 + 0 * 256;
                    int dstIP = netmask + dstParsedId;
                    MacAddress nextMac = MacAddress.valueOf("00:00:00:00:10:" + String.format("%02x", dstParsedId));
@@ -187,7 +191,7 @@ public class AppComponent {
                }
                // It is impossible to get the IP address form a device id
                // So, I need to square device id with host IP and device IP
-               // i.e., "of:0000000000000002" <-> "192.168.0.2" <-> "10.0.0.2"
+               // i.e., "br2" <-> "192.168.10.2" <-> "10.0.0.2"
              }
            }
         }
